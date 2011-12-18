@@ -1,0 +1,33 @@
+--- midishare/src/linux/drivers/alsa/makefile.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/linux/drivers/alsa/makefile	2011-12-18 09:29:55.395200593 +0100
+@@ -1,7 +1,7 @@
+ 
+ INC = -I../../Include
+ UTILS = ../../lib/msUtilities.o
+-LIB = $(UTILS) -Wl,-L../../library -lMidiShare -lasound
++LIB = $(UTILS) -Wl,-L../../library -lMidiShare -lasound -lpthread
+ BIN=/usr/local/bin
+ 
+ Target = msAlsaSeq
+--- midishare/src/linux/drivers/raw/midi/makefile.orig	2011-12-18 13:10:40.075644074 +0100
++++ midishare/src/linux/drivers/raw/midi/makefile	2011-12-18 13:18:23.398992922 +0100
+@@ -1,7 +1,7 @@
+ 
+ INC = -I../../../Include
+ UTILS = ../../../lib/msUtilities.o
+-LIB = $(UTILS) -Wl,-L../../../library -lMidiShare 
++LIB = $(UTILS) -Wl,-L../../../library -lMidiShare -lpthread
+ BIN=/usr/local/bin
+ 
+ Target = msRawMidi
+--- midishare/src/linux/drivers/raw/serial/makefile.orig	2011-12-18 13:10:40.078977408 +0100
++++ midishare/src/linux/drivers/raw/serial/makefile	2011-12-18 13:18:36.295660020 +0100
+@@ -1,7 +1,7 @@
+ 
+ INC   = -I../../../Include
+ UTILS = ../../../lib/msUtilities.o
+-LIB   = $(UTILS) -Wl,-L../../../library -lMidiShare 
++LIB   = $(UTILS) -Wl,-L../../../library -lMidiShare -lpthread
+ BIN   = /usr/local/bin
+ 
+ Target = msRawSerial

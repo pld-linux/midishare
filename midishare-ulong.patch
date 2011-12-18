@@ -1,0 +1,10 @@
+--- midishare/src/common/Headers/msTypes.h.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/common/Headers/msTypes.h	2011-12-18 08:38:39.515097603 +0100
+@@ -67,6 +67,7 @@
+ 	typedef unsigned char Byte;
+ 	typedef char * Ptr;
+ 	typedef unsigned char Boolean;
++	typedef unsigned long ulong;
+ #define false 0
+ #define true 1
+ #endif

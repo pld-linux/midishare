@@ -1,0 +1,137 @@
+--- midishare/src/linux/drivers/net/doc/makefile.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/linux/drivers/net/doc/makefile	2011-12-18 09:37:33.458549264 +0100
+@@ -2,9 +2,8 @@
+ Target = msInetDriver.1
+ 
+ install :
+-	[ -f $(Target).bz2 ] || bzip2 $(Target)
+ 	install -d $(MAN1)
+-	install -m 644 -o root $(Target).bz2 $(MAN1)
++	install -m 644 $(Target) $(MAN1)
+ 
+ uninstall :
+-	rm -f $(MAN1)/$(Target).bz2
++	rm -f $(MAN1)/$(Target)
+--- midishare/src/linux/drivers/alsa/makefile.orig	2011-12-18 09:33:41.161874821 +0100
++++ midishare/src/linux/drivers/alsa/makefile	2011-12-18 09:39:08.258552440 +0100
+@@ -18,11 +18,10 @@
+ 	rm -f $(Target)
+ 
+ install :
+-	install -m 6755 -s $(Target) $(BIN)
+-	[ -f $(ManTarget).bz2 ] || bzip2 $(ManTarget)
++	install -m 6755 $(Target) $(BIN)
+ 	install -d $(MAN1)
+-	install -m 644 -o root $(ManTarget).bz2 $(MAN1)
++	install -m 644 $(ManTarget) $(MAN1)
+ 
+ uninstall :
+ 	rm -f $(BIN)/$(Target)
+-	rm -f $(MAN1)/$(ManTarget).bz2
++	rm -f $(MAN1)/$(ManTarget)
+--- midishare/src/linux/applications/radio-hd-server/makefile.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/linux/applications/radio-hd-server/makefile	2011-12-18 11:06:04.458727096 +0100
+@@ -34,8 +34,8 @@
+ 	rm -f $(Target)  $(Control) *.o
+ 
+ install :
+-	install -m 755 -s $(Target) $(BIN)
+-	install -m 755 -s $(Control) $(BIN)
++	install -m 755 $(Target) $(BIN)
++	install -m 755 $(Control) $(BIN)
+ 
+ uninstall :
+ 	rm -f $(BIN)/$(Target)
+--- midishare/src/linux/tools/makefile.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/linux/tools/makefile	2011-12-18 11:07:31.955396695 +0100
+@@ -3,9 +3,8 @@
+ LIB = -Wl,-L../library -lMidiShare
+ 
+ ToolSet = MidiGetVersion MidiCountAppls MidiGetIndAppl MidiGetName MidiGetNamedAppl MidiConnect MidiIsConnected MidiGetTime
+-InstallDir = $(HOME)/bin
+-PublicDir  = /usr/local/bin
+-ManDir     = /usr/local/man/man1
++BIN  = /usr/local/bin
++MAN1 = /usr/local/man/man1
+ 
+ all : $(ToolSet) 
+ 
+@@ -35,11 +34,9 @@
+ 
+ 
+ install : $(ToolSet)
+-	strip $(ToolSet)
+-	cp $(ToolSet) $(PublicDir)
+-	bzip2 -k -f man1/*.1
+-	install -d $(ManDir)
+-	mv -f man1/*.bz2 $(ManDir)
++	cp $(ToolSet) $(BIN)
++	install -d $(MAN1)
++	install -m644 man1/*.1 $(MAN1)
+ 
+ clean : 
+ 	rm -f $(ToolSet)
+--- midishare/src/linux/scripts/makefile.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/linux/scripts/makefile	2011-12-18 11:27:56.958771044 +0100
+@@ -1,10 +1,9 @@
+ 
+ ScriptSet=MidiGetStat msQuit
+-PublicDir=/usr/local/bin
+-ManDir=/usr/local/man/man1
++BIN=/usr/local/bin
++MAN1=/usr/local/man/man1
+ 
+ 
+ install : $(ScriptSet)
+-	cp $(ScriptSet) $(PublicDir)
+-	bzip2 -k -f man1/*.1
+-	mv -f man1/*.bz2 $(ManDir)
++	cp $(ScriptSet) $(BIN)
++	install -m644 man1/*.1 $(MAN1)
+--- midishare/src/linux/drivers/raw/midi/makefile.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/linux/drivers/raw/midi/makefile	2011-12-18 13:09:12.335641137 +0100
+@@ -15,7 +15,7 @@
+ 	rm -f $(Target)
+ 
+ install :
+-	install -m 6755 -s $(Target) $(BIN)
++	install -m 6755 $(Target) $(BIN)
+ 
+ uninstall :
+ 	rm -f $(BIN)/$(Target)
+--- midishare/src/linux/drivers/raw/serial/makefile.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/linux/drivers/raw/serial/makefile	2011-12-18 13:09:31.192308435 +0100
+@@ -15,7 +15,7 @@
+ 	rm -f $(Target)
+ 
+ install :
+-	install -m 6755 -s $(Target) $(BIN)
++	install -m 6755 $(Target) $(BIN)
+ 	install msRawDev $(BIN)
+ 
+ uninstall :
+--- midishare/src/linux/drivers/net/makefile.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/linux/drivers/net/makefile	2011-12-18 13:15:36.945654016 +0100
+@@ -30,8 +30,7 @@
+ 
+ install :
+ 	make -C doc install
+-	strip $(Target)
+-	install -m 6755 -s $(Target) $(BIN)
++	install -m 6755 $(Target) $(BIN)
+ 
+ uninstall :
+ 	make -C doc uninstall
+--- midishare/src/linux/library/makefile.orig	2011-12-18 15:38:54.012608543 +0100
++++ midishare/src/linux/library/makefile	2011-12-18 15:41:31.572613819 +0100
+@@ -16,8 +16,8 @@
+ 	if [ ! -f $(LIB) ]; then ln -s $(LIB).1 $(LIB); fi
+ 
+ install: $(DEST)/$(LIB).1.0 
+-	if [ ! -f $(DEST)/$(LIB) ]; then ln -s $(DEST)/$(LIB).1 $(DEST)/$(LIB); fi
+-	if [ ! -f $(DEST)/$(LIB).1 ]; then ln -s $(DEST)/$(LIB).1.0 $(DEST)/$(LIB).1; fi
++	if [ ! -f $(DEST)/$(LIB) ]; then ln -s $(LIB).1 $(DEST)/$(LIB); fi
++	if [ ! -f $(DEST)/$(LIB).1 ]; then ln -s $(LIB).1.0 $(DEST)/$(LIB).1; fi
+ 
+ uninstall: 
+ 	if [ -f $(DEST)/$(LIB) ]; then rm $(DEST)/$(LIB); fi

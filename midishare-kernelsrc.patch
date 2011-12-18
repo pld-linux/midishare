@@ -1,0 +1,19 @@
+--- midishare/src/linux/makefile.in/makefile.kernel.orig	2011-12-18 08:39:20.981765658 +0100
++++ midishare/src/linux/makefile.in/makefile.kernel	2011-12-18 08:43:55.808441527 +0100
+@@ -11,6 +11,7 @@
+       msSorter.o msDriver.o lffifoIntel.o lflifoIntel.o
+ 
+ ifndef KERNELRELEASE
++KERNELSRC=/lib/modules/$(shell uname -r)/build
+ 
+ A = atomic
+ C = Clients
+@@ -28,7 +29,7 @@
+ 
+ all:
+ 	for x in $(COMMON); do ln -sf ../../common/$$x `basename $$x`; done
+-	make -C /lib/modules/$(shell uname -r)/build M=`pwd` modules
++	make -C $(KERNELSRC) M=`pwd` modules
+ 
+ clean:
+ 	-rm -f *.ko *.o

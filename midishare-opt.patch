@@ -1,0 +1,450 @@
+--- midishare/src/linux/makefile.in/makefile.common.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/linux/makefile.in/makefile.common	2011-12-18 13:27:00.899010250 +0100
+@@ -1,8 +1,9 @@
+ 
+ TARGET = ../linux/msCommon.o
+-OPTIONS = -D_LOOSE_KERNEL_NAMES -DMODVERSIONS -D__Pentium__ -DCONFIG_KERNELD -DMODULE -D__KERNEL__ -DLINUX  -D__NO_VERSION__ 
+-INC = -I Headers -I atomic -I /lib/modules/`uname -r`/build/include/
+-CFLAGS := $(CFLAGS) $(OPTIONS) $(INC) 
++OPTIONS = -D_LOOSE_KERNEL_NAMES -DMODVERSIONS -DMODULE -D__KERNEL__ -DLINUX  -D__NO_VERSION__ 
++KERNELSRC=/lib/modules/`uname -r`/build
++INC = -I Headers -I atomic -I $(KERNELSRC)/include/
++CFLAGS := $(COPTFLAGS) $(OPTIONS) $(INC)
+ #CFLAGS := -O3 -Wall $(OPTIONS) $(INC) 
+ #CC = gcc
+ 
+--- midishare/src/linux/makefile.in/makefile.network.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/linux/makefile.in/makefile.network	2011-12-18 13:29:35.649015431 +0100
+@@ -2,8 +2,8 @@
+ #CXX  = gcc
+ INC = -I../../linux/Include/ -I./include -I../../common/Headers  -I../../common/atomic
+ #CXXFLAGS = -g $(INC) -D__Pentium__ -O3 -Wall
+-CXXFLAGS := $(CXXFLAGS) $(INC) -D__Pentium__ -O3 -Wall
+-CFLAGS = $(CXXFLAGS)
++CXXFLAGS := $(CXXOPTFLAGS) $(INC) -Wall
++CFLAGS = $(COPTFLAGS) $(INC) -Wall
+ 
+ 
+ CPPSRC = $(wildcard *.cpp Midi/*.cpp state/*.cpp TCP/*.cpp)
+--- midishare/src/linux/makefile.in/make.lib.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/linux/makefile.in/make.lib	2011-12-18 13:32:21.462354317 +0100
+@@ -1,10 +1,9 @@
+ 
+ TARGET = ../linux/lib/msUtilities.o
+-OPTIONS = -D__Pentium__
+ INC = -I../linux/Include
+ #CFLAGS := -O6 -Wall $(OPTIONS) $(INC)
+ #CC = gcc
+-CFLAGS := -O3 -Wall $(CFLAGS) $(OPTIONS) $(INC)
++CFLAGS := -Wall $(COPTFLAGS) $(OPTIONS) $(INC)
+ 
+ SRC = *.c
+ OBJ = MidiPrint.o EventToMidiStream.o MidiStreamToEvent.o msDrvUtils.o 
+--- midishare/src/linux/makefile.in/makefile.kernel.orig	2011-12-18 13:34:06.059024487 +0100
++++ midishare/src/linux/makefile.in/makefile.kernel	2011-12-18 13:38:39.689033647 +0100
+@@ -1,6 +1,6 @@
+ # Works with ubuntu 7.10 (Yann, 7 april 2008)
+  
+-EXTRA_CFLAGS += -I$(obj)/../../common/Headers  -I$(obj)/../../common/atomic -D_LOOSE_KERNEL_NAMES -DMODVERSIONS -D__Pentium__ -DCONFIG_KERNELD -DMODULE -D__KERNEL__ -DLINUX
++EXTRA_CFLAGS += -I$(obj)/../../common/Headers  -I$(obj)/../../common/atomic -D_LOOSE_KERNEL_NAMES -DMODVERSIONS -DMODULE -D__KERNEL__ -DLINUX
+ 
+ obj-m := midishare.o
+ midishare-objs := msLoader.o MidiShareLinux.o MidiShare.o msConf.o \
+--- midishare/src/linux/makefile.in/makefile.lib.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/linux/makefile.in/makefile.lib	2011-12-18 13:38:59.805700989 +0100
+@@ -1,6 +1,6 @@
+ 
+ TARGET = ../../linux/libCommon.o
+-FLAGS := -O0 -Wall -g -D_REENTRANT -D_LOOSE_KERNEL_NAMES -D__Pentium__
++FLAGS := $(COPTFLAGS) -Wall -D_REENTRANT -D_LOOSE_KERNEL_NAMES
+ LOBJ = lib
+ CC = gcc
+ LD = ld
+--- midishare/src/linux/library/makefile.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/linux/library/makefile	2011-12-18 14:05:51.322421614 +0100
+@@ -1,6 +1,6 @@
+ 
+ CC = gcc
+-FLAGS := -O3 -Wall -g -D_REENTRANT -D__Pentium__
++FLAGS := $(COPTFLAGS) -Wall -D_REENTRANT
+ CFLAGS := $(FLAGS) -fPIC -I../../common/Headers -I../../common/atomic
+ 
+ LMS = libMidiShare
+@@ -11,7 +11,7 @@
+ SRC = $(LMS).c
+ 
+ $(LIB).1.0 :  $(OBJ)
+-	$(CC) $(OBJ) -g -lpthread -shared -fPIC -W1,soname,$(LIB).1 -o $(LIB).1.0
++	$(CC) $(OBJ) $(LDFLAGS) -lpthread -shared -fPIC -Wl,-soname,$(LIB).1 -o $(LIB).1.0
+ 	if [ ! -f $(LIB).1 ]; then ln -s $(LIB).1.0 $(LIB).1; fi
+ 	if [ ! -f $(LIB) ]; then ln -s $(LIB).1 $(LIB); fi
+ 
+--- midishare/src/linux/applications/msclock/Makefile.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/linux/applications/msclock/Makefile	2011-12-18 14:11:16.795765846 +0100
+@@ -2,17 +2,18 @@
+ cappl := $(patsubst %.c, %, $(wildcard *.c))
+ LIB   := ../lib/msApplsLib.o -Wl,-L../../library -lMidiShare
+ INC   := -I../../Include -I../lib
+-options := -Wall -O6 $(INC) `pkg-config --cflags --libs gtk+-2.0` $(LIB)
++options := -Wall $(COPTFLAGS) $(INC) `pkg-config --cflags --libs gtk+-2.0` $(LIB)
++ccoptions := -Wall $(CXXOPTFLAGS) $(INC) `pkg-config --cflags --libs gtk+-2.0` $(LIB)
+ DEST = /usr/local/bin
+ 
+ 
+ all : $(cppappl) $(cappl)
+  
+ $(cppappl) : % : %.cpp  
+-	gcc $(options) $< -o $@
++	$(CXX) $(ccoptions) $< -o $@
+  
+ $(cappl) : % : %.c
+-	gcc $(options) $< -o $@
++	$(CC) $(options) $< -o $@
+ 
+ clean :
+ 	rm $(cppappl) $(cappl)
+--- midishare/src/linux/applications/msconnect/Makefile.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/linux/applications/msconnect/Makefile	2011-12-18 14:11:05.145765456 +0100
+@@ -2,7 +2,8 @@
+ cappl := $(patsubst %.c, %, $(wildcard *.c))
+ LIB   := ../lib/msApplsLib.o -Wl,-L../../library -lMidiShare
+ INC   := -I../../Include -I../lib
+-options := -Wall -O6 $(INC) `pkg-config --cflags --libs gtk+-2.0` $(LIB)
++options := -Wall $(COPTFLAGS) $(INC) `pkg-config --cflags --libs gtk+-2.0` $(LIB)
++ccoptions := -Wall $(CXXOPTFLAGS) $(INC) `pkg-config --cflags --libs gtk+-2.0` $(LIB)
+ 
+ DEST = /usr/local/bin
+ 
+@@ -10,10 +11,10 @@ DEST = /usr/local/bin
+ all : $(cppappl) $(cappl)
+  
+ $(cppappl) : % : %.cpp  
+-	gcc $(options) $< -o $@
++	$(CXX) $(ccoptions) $< -o $@
+  
+ $(cappl) : % : %.c
+-	gcc $(options) $< -o $@
++	$(CC) $(options) $< -o $@
+ 
+ clean :
+ 	rm $(cppappl) $(cappl)
+--- midishare/src/linux/applications/mscontrol/Makefile.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/linux/applications/mscontrol/Makefile	2011-12-18 14:11:45.282433467 +0100
+@@ -2,17 +2,18 @@
+ cappl := $(patsubst %.c, %, $(wildcard *.c))
+ LIB   := ../lib/msApplsLib.o -Wl,-L../../library -lMidiShare
+ INC   := -I../../Include -I../lib
+-options := -Wall -O6 $(INC) `pkg-config --cflags --libs gtk+-2.0` $(LIB)
++options := -Wall $(COPTFLAGS) $(INC) `pkg-config --cflags --libs gtk+-2.0` $(LIB)
++ccoptions := -Wall $(CXXOPTFLAGS) $(INC) `pkg-config --cflags --libs gtk+-2.0` $(LIB)
+ DEST = /usr/local/bin
+ 
+ 
+ all : $(cppappl) $(cappl)
+  
+ $(cppappl) : % : %.cpp  
+-	gcc $(options) $< -o $@
++	$(CXX) $(ccoptions) $< -o $@
+  
+ $(cappl) : % : %.c
+-	gcc $(options) $< -o $@
++	$(CC) $(options) $< -o $@
+ 
+ clean :
+ 	rm $(cppappl) $(cappl)
+--- midishare/src/linux/applications/msdisplay/Makefile.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/linux/applications/msdisplay/Makefile	2011-12-18 14:12:11.765767686 +0100
+@@ -2,17 +2,18 @@
+ cappl := $(patsubst %.c, %, $(wildcard *.c))
+ LIB   := ../lib/msApplsLib.o -Wl,-L../../library -lMidiShare
+ INC   := -I../../Include -I../lib
+-options := -Wall -O6 $(INC) `pkg-config --cflags --libs gtk+-2.0` $(LIB)
++options := -Wall $(COPTFLAGS) $(INC) `pkg-config --cflags --libs gtk+-2.0` $(LIB)
++ccoptions := -Wall $(CXXOPTFLAGS) $(INC) `pkg-config --cflags --libs gtk+-2.0` $(LIB)
+ DEST = /usr/local/bin
+ 
+ 
+ all : $(cppappl) $(cappl)
+  
+ $(cppappl) : % : %.cpp  
+-	gcc $(options) $< -o $@
++	$(CXX) $(ccoptions) $< -o $@
+  
+ $(cappl) : % : %.c
+-	gcc $(options) $< -o $@
++	$(CC) $(options) $< -o $@
+ 
+ clean :
+ 	rm $(cppappl) $(cappl)
+--- midishare/src/linux/applications/msecho/Makefile.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/linux/applications/msecho/Makefile	2011-12-18 14:12:41.412435346 +0100
+@@ -2,13 +2,13 @@
+ cappl := msecho
+ LIB   := ../lib/msApplsLib.o -Wl,-L../../library -lMidiShare
+ INC   := -I../../Include -I../lib
+-options := -Wall -O6 $(INC) `pkg-config --cflags --libs gtk+-2.0` $(LIB)
++options := -Wall $(COPTFLAGS) $(INC) `pkg-config --cflags --libs gtk+-2.0` $(LIB)
+ DEST = /usr/local/bin
+ 
+ all : $(cappl)
+  
+ $(cappl) : % : %.c
+-	gcc $(options) $< -o $@
++	$(CC) $(options) $< -o $@
+ 
+ clean :
+ 	rm -f $(cappl)
+--- midishare/src/linux/applications/msplayer/Makefile.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/linux/applications/msplayer/Makefile	2011-12-18 14:13:05.969102834 +0100
+@@ -2,14 +2,14 @@
+ cappl := msplayer
+ LIB   := ../lib/msApplsLib.o -Wl,-L../../library -lMidiShare -lPlayer
+ INC   := -I../../Include -I../lib
+-options := $(INC) -Wall -O6 `pkg-config --cflags --libs gtk+-2.0` $(LIB)
++options := $(INC) -Wall $(COPTFLAGS) `pkg-config --cflags --libs gtk+-2.0` $(LIB)
+ DEST=/usr/local/bin
+ 
+ all : $(cappl)
+  
+   
+ $(cappl) : msplayer.c Player.h
+-	gcc $(options) $< -o $@
++	$(CC) $(options) $< -o $@
+ 
+ clean :
+ 	rm $(cappl)
+--- midishare/src/linux/applications/mssync/Makefile.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/linux/applications/mssync/Makefile	2011-12-18 14:13:22.342436716 +0100
+@@ -2,13 +2,13 @@
+ cappl := mssync
+ LIB   := ../lib/msApplsLib.o -Wl,-L../../library -lMidiShare
+ INC   := -I../../Include -I../lib
+-options := -Wall -O6 $(INC) `pkg-config --cflags --libs gtk+-2.0` $(LIB)
++options := -Wall $(COPTFLAGS) $(INC) `pkg-config --cflags --libs gtk+-2.0` $(LIB)
+ DEST=/usr/local/bin
+ 
+ all : $(cappl)
+  
+ $(cappl) : % : %.c
+-	gcc $(options) $< -o $@
++	$(CC) $(options) $< -o $@
+ 
+ clean :
+ 	rm $(cappl)
+--- midishare/src/linux/applications/radio-hd-server/makefile.orig	2011-12-18 14:06:59.865757243 +0100
++++ midishare/src/linux/applications/radio-hd-server/makefile	2011-12-18 14:14:32.195772387 +0100
+@@ -8,8 +8,8 @@
+ 
+ INC = -I ../../Include
+ UTILS = ../../lib/msUtilities.o
+-CXXFLAGS = -g $(INC)
+-CFLAGS   = $(CXXFLAGS)
++CXXFLAGS = $(CXXOPTFLAGS) $(INC)
++CFLAGS   = $(COPTFLAGS) $(INC)
+ 
+ LIB = $(UTILS) -Wl,-L../../library -lMidiShare
+ BIN=/usr/local/bin
+@@ -17,7 +17,7 @@ OBJ1 = msWANConnect.o TInetAddress.o msA
+ OBJ2 = msWANConnect.o TInetAddress.o msControlSignal.o
+ SRC = msWANConnect.c TInetAddress.cpp msAnything2Midi.c msControlSignal.c
+ #CC = gcc
+-CC = g++
++CXX = g++
+ 
+ Target = RadioHDServer
+ Control = msControlSignal
+@@ -25,10 +25,10 @@ Control = msControlSignal
+ all : $(Target) $(Control)
+ 
+ $(Target) : $(OBJ1)
+-	$(CC) $(OBJ1) $(LIB) -o $(Target)
++	$(CXX) $(OBJ1) $(LIB) -o $(Target)
+ 
+ $(Control) : $(OBJ2)
+-	$(CC) $(OBJ2) $(LIB) -o $(Control)
++	$(CXX) $(OBJ2) $(LIB) -o $(Control)
+ 
+ clean : 
+ 	rm -f $(Target)  $(Control) *.o
+--- midishare/src/linux/applications/samples/Makefile.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/linux/applications/samples/Makefile	2011-12-18 14:15:56.422441875 +0100
+@@ -1,6 +1,6 @@
+ #INC	= ../Headers
+ INC	= ../../Include
+-OPTIONS	=
++CFLAGS	= $(COPTFLAGS)
+ LIB	= -Wl,-L../../library -lMidiShare
+ 
+ 
+@@ -10,39 +10,39 @@
+ 
+ 
+ msTutorial : msTutorial.c  
+-	gcc msTutorial.c  -g -I$(INC) -o msTutorial $(LIB)
++	$(CC) $(CFLAGS) msTutorial.c  -I$(INC) -o msTutorial $(LIB)
+ 
+ 
+ msSendNote : msSendNote.c    
+-	gcc msSendNote.c  -g -I$(INC) -o msSendNote $(LIB) 
++	$(CC) $(CFLAGS) msSendNote.c  -I$(INC) -o msSendNote $(LIB) 
+ 
+ msReset : msReset.c    
+-	gcc msReset.c  -g -I$(INC) -o msReset $(LIB) 
++	$(CC) $(CFLAGS) msReset.c  -I$(INC) -o msReset $(LIB) 
+ 
+ 
+ msArpege : msArpege.c    
+-	gcc msArpege.c  -g -I$(INC) -o msArpege $(LIB) 
++	$(CC) $(CFLAGS) msArpege.c  -I$(INC) -o msArpege $(LIB) 
+ 
+ 
+ msSequencer : msSequencer.c    
+-	gcc msSequencer.c  -g -I$(INC) -o msSequencer $(LIB) 
++	$(CC) $(CFLAGS) msSequencer.c  -I$(INC) -o msSequencer $(LIB) 
+ 
+ 
+ msSendSeq : msSendSeq.c    
+-	gcc msSendSeq.c  -g -I$(INC) -o msSendSeq $(LIB) 
++	$(CC) $(CFLAGS) msSendSeq.c  -I$(INC) -o msSendSeq $(LIB) 
+ 
+ 
+ msDisplay : msDisplay.c    
+-	gcc msDisplay.c  -g -I$(INC) -o msDisplay $(LIB) 
++	$(CC) $(CFLAGS) msDisplay.c  -I$(INC) -o msDisplay $(LIB) 
+ 
+ msMidiPlayer : msMidiPlayer.c  midifile.c    
+-	gcc msMidiPlayer.c  midifile.c -g $(OPTIONS) -I$(INC) -o msMidiPlayer $(LIB) 
++	$(CC) $(CFLAGS) msMidiPlayer.c  midifile.c $(OPTIONS) -I$(INC) -o msMidiPlayer $(LIB) 
+ 
+ msEcho : msEcho.c        
+-	gcc   msEcho.c -g $(OPTIONS) -I$(INC) -o msEcho $(LIB) 
++	$(CC) $(CFLAGS)   msEcho.c $(OPTIONS) -I$(INC) -o msEcho $(LIB) 
+ 
+ msClock : msClock.c      
+-	gcc   msClock.c -g $(OPTIONS) -I$(INC) -o msClock $(LIB) 
++	$(CC) $(CFLAGS)   msClock.c $(OPTIONS) -I$(INC) -o msClock $(LIB) 
+ 
+ 
+ clean:
+--- midishare/src/linux/makefile.in/makefile.appls.orig	2011-12-17 21:52:16.000000000 +0100
++++ midishare/src/linux/makefile.in/makefile.appls	2011-12-18 14:20:03.939116830 +0100
+@@ -1,6 +1,6 @@
+ 
+ TARGET := msApplsLib.o
+-CFLAGS := $(CFLAGS) -I../../Include `pkg-config --cflags gtk+-2.0`
++CFLAGS := $(COPTFLAGS) -I../../Include `pkg-config --cflags gtk+-2.0`
+ OBJ  := msApplsTools.o
+ #CC   = gcc
+ 
+--- midishare/src/linux/tools/makefile.orig	2011-12-18 14:21:19.032452676 +0100
++++ midishare/src/linux/tools/makefile	2011-12-18 14:30:43.705804919 +0100
+@@ -5,32 +5,33 @@
+ ToolSet = MidiGetVersion MidiCountAppls MidiGetIndAppl MidiGetName MidiGetNamedAppl MidiConnect MidiIsConnected MidiGetTime
+ BIN  = /usr/local/bin
+ MAN1 = /usr/local/man/man1
++CFLAGS = $(COPTFLAGS)
+ 
+ all : $(ToolSet) 
+ 
+ MidiGetVersion : MidiGetVersion.c
+-	gcc MidiGetVersion.c  -g -I$(INC) -o MidiGetVersion $(LIB) 
++	$(CC) $(CFLAGS) MidiGetVersion.c  -I$(INC) -o MidiGetVersion $(LIB) 
+ 
+ MidiCountAppls : MidiCountAppls.c
+-	gcc MidiCountAppls.c  -g -I$(INC) -o MidiCountAppls $(LIB) 
++	$(CC) $(CFLAGS) MidiCountAppls.c  -I$(INC) -o MidiCountAppls $(LIB) 
+ 
+ MidiGetIndAppl : MidiGetIndAppl.c
+-	gcc MidiGetIndAppl.c  -g -I$(INC) -o MidiGetIndAppl $(LIB) 
++	$(CC) $(CFLAGS) MidiGetIndAppl.c  -I$(INC) -o MidiGetIndAppl $(LIB) 
+ 
+ MidiGetName : MidiGetName.c
+-	gcc MidiGetName.c  -g -I$(INC) -o MidiGetName $(LIB) 
++	$(CC) $(CFLAGS) MidiGetName.c  -I$(INC) -o MidiGetName $(LIB) 
+ 
+ MidiGetNamedAppl : MidiGetNamedAppl.c
+-	gcc MidiGetNamedAppl.c  -g -I$(INC) -o MidiGetNamedAppl $(LIB) 
++	$(CC) $(CFLAGS) MidiGetNamedAppl.c  -I$(INC) -o MidiGetNamedAppl $(LIB) 
+ 
+ MidiConnect : MidiConnect.c
+-	gcc MidiConnect.c  -g -I$(INC) -o MidiConnect $(LIB) 
++	$(CC) $(CFLAGS) MidiConnect.c  -I$(INC) -o MidiConnect $(LIB) 
+ 
+ MidiIsConnected : MidiIsConnected.c
+-	gcc MidiIsConnected.c  -g -I$(INC) -o MidiIsConnected $(LIB) 
++	$(CC) $(CFLAGS) MidiIsConnected.c  -I$(INC) -o MidiIsConnected $(LIB) 
+ 
+ MidiGetTime: MidiGetTime.c
+-	gcc MidiGetTime.c  -g -I$(INC) -o MidiGetTime $(LIB) 
++	$(CC) $(CFLAGS) MidiGetTime.c  -I$(INC) -o MidiGetTime $(LIB) 
+ 
+ 
+ install : $(ToolSet)
+--- midishare/src/linux/drivers/raw/midi/makefile.orig	2011-12-18 14:21:19.042452678 +0100
++++ midishare/src/linux/drivers/raw/midi/makefile	2011-12-18 14:31:35.485806651 +0100
+@@ -3,13 +3,14 @@
+ UTILS = ../../../lib/msUtilities.o
+ LIB = $(UTILS) -Wl,-L../../../library -lMidiShare -lpthread
+ BIN=/usr/local/bin
++CFLAGS=$(COPTFLAGS)
+ 
+ Target = msRawMidi
+ 
+ all : $(Target)
+ 
+ $(Target) : $(Target).c $(UTILS)
+-	gcc $(Target).c  -g $(INC) $(LIB) -o $(Target)
++	$(CC) $(CFLAGS) $(Target).c  $(INC) $(LIB) -o $(Target)
+ 
+ clean : 
+ 	rm -f $(Target)
+--- midishare/src/linux/drivers/raw/serial/makefile.orig	2011-12-18 14:21:19.042452678 +0100
++++ midishare/src/linux/drivers/raw/serial/makefile	2011-12-18 14:32:42.782475572 +0100
+@@ -3,13 +3,14 @@
+ UTILS = ../../../lib/msUtilities.o
+ LIB   = $(UTILS) -Wl,-L../../../library -lMidiShare -lpthread
+ BIN   = /usr/local/bin
++CFLAGS = $(COPTFLAGS)
+ 
+ Target = msRawSerial
+ 
+ all : $(Target)
+ 
+ $(Target) : $(Target).c $(UTILS)
+-	gcc $(Target).c  -g $(INC) $(LIB) -o $(Target)
++	$(CC) $(CFLAGS) $(Target).c  $(INC) $(LIB) -o $(Target)
+ 
+ clean : 
+ 	rm -f $(Target)
+--- midishare/src/linux/drivers/net/makefile.orig	2011-12-18 14:21:19.042452678 +0100
++++ midishare/src/linux/drivers/net/makefile	2011-12-18 14:35:56.495815391 +0100
+@@ -3,8 +3,8 @@
+ INC = -I../../Include -I../../../lib/Network/include -I../../../common/Headers  -I../../../common/atomic
+ NETLIB = ../../../lib/Network/msNetDriverLib.o
+ LIB = $(NETLIB) -Wl,-L../../library -lMidiShare -lpthread
+-CXXFLAGS = -g $(INC) -O3 -Wall -D__Pentium__
+-CFLAGS = $(CXXFLAGS)
++CXXFLAGS = $(CXXOPTFLAGS) $(INC) -Wall
++CFLAGS = $(COPTFLAGS) $(INC) -Wall
+ 
+ BIN=/usr/local/bin
+ 
+--- midishare/src/linux/drivers/alsa/makefile.orig	2011-12-18 14:36:28.185816452 +0100
++++ midishare/src/linux/drivers/alsa/makefile	2011-12-18 14:38:47.999154466 +0100
+@@ -3,6 +3,7 @@
+ UTILS = ../../lib/msUtilities.o
+ LIB = $(UTILS) -Wl,-L../../library -lMidiShare -lasound -lpthread
+ BIN=/usr/local/bin
++CFLAGS=$(COPTFLAGS)
+ 
+ Target = msAlsaSeq
+ 
+@@ -12,7 +13,7 @@
+ all : $(Target)
+ 
+ $(Target) : $(Target).c $(UTILS)
+-	gcc $(Target).c  -g $(INC) $(LIB) -o $(Target)
++	$(CC) $(CFLAGS) $(Target).c  $(INC) $(LIB) -o $(Target)
+ 
+ clean : 
+ 	rm -f $(Target)
